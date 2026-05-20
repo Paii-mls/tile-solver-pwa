@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#1E88E5" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <title>Tile Solver (MVP v0.2)</title>
+  <title>Tile Solver (MVP v0.4)</title>
 </head>
 <body>
   <header>
-    <div class="title">Tile Solver (MVP)</div>
-    <div class="subtitle">เวอร์ชันทดสอบ v0.2: อัปโหลด/วางรูป → แตะไพ่ที่ "กดได้" → ระบบแนะนำใบที่ควรกดต่อ</div>
+    <div class="title">Tile Solver (MVP v0.4)</div>
+    <div class="subtitle">แก้ coordinate สำหรับ iPhone Retina/DPR แล้ว • รองรับ Paste screenshot จาก iOS</div>
   </header>
 
   <main>
@@ -25,28 +25,26 @@
         <button id="btnReset" class="btn secondary" type="button">ล้างข้อมูล</button>
       </div>
 
-      <textarea id="pasteTarget" class="pasteTarget" aria-label="paste target" placeholder="บน iPhone: แตะปุ่มวางรูป → แตะค้างที่นี่แล้วเลือก Paste"></textarea>
-
       <div class="row">
         <div class="field">
-          <label>ขนาดกรอบไพ่ (ปรับให้พอดีกับเกม)</label>
-          <input id="tileSize" type="range" min="40" max="140" value="86" />
+          <label>ขนาดกรอบไพ่: <span id="tileSizeLabel">86</span> px</label>
+          <input id="tileSize" type="range" min="40" max="150" value="86" />
         </div>
       </div>
 
       <div class="row hint">
-        <div>วิธีใช้ (เร็วสุด):</div>
+        <div><b>วิธีใช้บน iOS แบบไม่เซฟรูป:</b></div>
         <ol>
-          <li>อัปโหลดสกรีนช็อต หรือคัดลอกรูปแล้วกด “วางรูปจากคลิปบอร์ด”</li>
-          <li>แตะเฉพาะไพ่ที่ <b>กดได้ (เปิดอยู่)</b> สัก 6–12 ใบ</li>
-          <li>ถ้าถาดมีไพ่อยู่แล้ว ให้กด <b>เพิ่มถาด</b> แล้วแตะไพ่ชนิดนั้นตามจำนวนจริง</li>
-          <li>กด <b>แนะนำ</b> เพื่อไฮไลต์ใบที่ควรกดต่อ</li>
+          <li>กด Screenshot ในเกม → แตะ thumbnail → Share → Copy / Copy and Delete</li>
+          <li>กลับมา PWA → กด <b>📋 วางรูป (Paste)</b></li>
+          <li>แตะเฉพาะไพ่ที่ <b>กดได้/เปิดอยู่</b> 6–12 ใบ</li>
+          <li>กด <b>✨ แนะนำใบที่ควรกด</b></li>
         </ol>
       </div>
 
       <div class="row">
         <button id="btnSuggest" class="btn primary" type="button">✨ แนะนำใบที่ควรกด</button>
-        <button id="btnAddTray" class="btn" type="button">➕ เพิ่มถาด (เลือกชนิดจากไพ่ที่แตะ)</button>
+        <button id="btnAddTray" class="btn" type="button">➕ เพิ่มถาดจากไพ่ล่าสุด/ที่แนะนำ</button>
         <button id="btnClearTray" class="btn secondary" type="button">ล้างถาด</button>
       </div>
 
@@ -67,24 +65,24 @@
 
       <div class="row">
         <details>
-          <summary>Tips / ข้อจำกัดของ MVP</summary>
+          <summary>Debug / ข้อจำกัด MVP</summary>
           <ul>
-            <li>MVP นี้ยังไม่รู้ "ชั้น/การทับ" อัตโนมัติ — ให้แตะเฉพาะใบที่กดได้ในเกมตอนนั้น</li>
-            <li>การแยกชนิดใช้การ "เทียบความเหมือน" จากภาพที่ครอปด้วย dHash จึงรองรับการเปลี่ยนธีมได้ดี</li>
-            <li>ถ้าแยกชนิดผิด ให้ปรับขนาดกรอบไพ่ให้พอดี แล้วแตะใหม่</li>
+            <li>v0.4 แก้ตำแหน่ง highlight โดย map พิกัดจาก CSS pixel → image coordinate ด้วย boundingClientRect + DPR-safe rendering</li>
+            <li>ยังต้องแตะเฉพาะไพ่ที่ “กดได้” เอง เพราะ MVP ยังไม่ auto-detect layer/overlap</li>
+            <li>ถ้า Paste อัตโนมัติไม่ได้ ให้กดปุ่ม Paste แล้วแตะค้างบริเวณหน้าเว็บ เลือก Paste</li>
           </ul>
         </details>
       </div>
     </section>
 
     <section class="canvasWrap">
-      <div class="canvasHint">แตะบนภาพเพื่อเพิ่มไพ่ (เฉพาะไพ่ที่กดได้). ลากเพื่อเลื่อน / pinch เพื่อซูม</div>
+      <div class="canvasHint">แตะเพื่อ mark ไพ่ • ลากเพื่อเลื่อน • pinch เพื่อซูม • กรอบแดงคือคำแนะนำ</div>
       <canvas id="canvas"></canvas>
     </section>
   </main>
 
   <footer>
-    <span class="small">Offline-ready PWA • v0.2 MVP</span>
+    <span class="small">Offline-ready PWA • v0.4</span>
   </footer>
 
   <div id="pasteCatcher" contenteditable="true" aria-label="paste-catcher"></div>

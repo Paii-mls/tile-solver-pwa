@@ -1,35 +1,16 @@
-# Tile Solver PWA (MVP v0.2)
+# Tile Solver PWA MVP v0.4
 
-เวอร์ชันทดสอบแบบ **client-only**:
-- อัปโหลดสกรีนช็อต หรือ **วางรูปจากคลิปบอร์ด (iOS)**
-- แตะไพ่ที่ "กดได้"
-- ระบบแนะนำใบที่ควรกดต่อ
+## Changes in v0.4
+- Fix highlight/tap coordinate mismatch on iPhone Retina / high DPR screens.
+- Canvas stores tile positions in image pixels and renders with boundingClientRect + devicePixelRatio-safe backing canvas.
+- Supports Paste screenshot workflow on iOS.
 
-> ข้อจำกัด: MVP ยังไม่ detect ชั้น/การทับจากภาพอัตโนมัติ จึงให้ผู้ใช้แตะเฉพาะไพ่ที่กดได้ ณ ตอนนั้น
+## iOS paste flow
+1. Take screenshot in game.
+2. Tap screenshot thumbnail.
+3. Share → Copy / Copy and Delete.
+4. Open PWA → tap “วางรูป (Paste)”.
+5. If automatic paste is blocked, long-press and choose Paste.
 
-## Run (Local)
-
-### Node
-```bash
-npx serve .
-```
-
-### Python
-```bash
-python -m http.server 8080
-```
-
-## Install as PWA
-- เปิดผ่าน Chrome/Safari บนมือถือ (ต้องเป็น HTTPS หรือ localhost)
-- เมนู → **Add to Home screen**
-
-## Paste image on iOS
-1. คัดลอกรูป (เช่น เปิดรูป screenshot แล้ว Share/Copy)
-2. เปิดเว็บ → กดปุ่ม **วางรูปจากคลิปบอร์ด (iOS)**
-3. ถ้า iOS ไม่อนุญาตให้อ่านคลิปบอร์ดตรง ๆ จะมีช่องข้อความโผล่ขึ้นมา
-4. แตะค้างในช่องนั้น แล้วเลือก **Paste**
-
-## Next improvements (Phase 2)
-- Auto-detect tile bounding boxes (OpenCV.js)
-- Auto-detect open tiles via overlap+layer
-- Full solver (plan to clear whole board)
+## Run
+Use HTTPS hosting such as GitHub Pages for PWA/service worker.
