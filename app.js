@@ -1,5 +1,7 @@
-// Tile Solver MVP (client-only)
-// Concept: user taps only 'open' tiles; app clusters by visual similarity (dHash) and recommends the next move based on tray counts.
+// Tile Solver MVP v0.2 (client-only)
+// - Upload image OR Paste image (iOS-friendly)
+// - User taps only 'open' tiles
+// - App clusters tile types via dHash and recommends the next move based on tray counts
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('canvas');
@@ -27,9 +29,15 @@ let suggestionId = null;
 // ---------- Utilities ----------
 function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
+function resetStateForNewImage(){
+  tiles = [];
+  nextId = 1;
+  suggestionId = null;
+  clearTray();
+}
+
 function resizeCanvasToImage() {
   if (!img) return;
-  // Use devicePixelRatio for sharpness
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(imgW * dpr);
   canvas.height = Math.round(imgH * dpr);
@@ -41,19 +49,16 @@ function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
     return;
   }
-  // clear using CSS pixel coords
   ctx.save();
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.restore();
 
-  // apply view
   ctx.save();
   ctx.translate(view.offsetX, view.offsetY);
   ctx.scale(view.scale, view.scale);
   ctx.drawImage(img, 0, 0, imgW, imgH);
 
-  // draw marked tiles
   for (const t of tiles) {
     const x = t.cx - t.w/2;
     const y = t.cy - t.h/2;
@@ -79,7 +84,6 @@ function screenToImageCoords(clientX, clientY) {
   const rect = canvas.getBoundingClientRect();
   const x = (clientX - rect.left);
   const y = (clientY - rect.top);
-  // x,y are in CSS pixels within canvas element; map to image coords via view transform
   const ix = (x - view.offsetX) / view.scale;
   const iy = (y - view.offsetY) / view.scale;
   return { ix, iy };
@@ -87,7 +91,6 @@ function screenToImageCoords(clientX, clientY) {
 
 // ---------- dHash clustering ----------
 function dHashFromCrop(cropCanvas) {
-  // classic dHash 9x8 (compare adjacent)
   const w = 9, h = 8;
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -95,14 +98,12 @@ function dHashFromCrop(cropCanvas) {
   cctx.drawImage(cropCanvas, 0, 0, w, h);
   const data = cctx.getImageData(0,0,w,h).data;
 
-  // grayscale values
   const gray = [];
   for (let i=0; i<data.length; i+=4){
     const r=data[i], g=data[i+1], b=data[i+2];
     gray.push((r*0.299 + g*0.587 + b*0.114));
   }
 
-  // build bits length 64
   let bits = new Uint8Array(64);
   let k=0;
   for (let y=0; y<h; y++){
@@ -122,13 +123,11 @@ function hamming(a, b) {
 }
 
 function colorForType(typeId){
-  // stable palette
   const palette = ['#00C853','#2962FF','#AA00FF','#FF6D00','#00B8D4','#D50000','#C51162','#64DD17','#6200EA','#0091EA'];
   return palette[(typeId-1) % palette.length];
 }
 
 function clusterTile(hash, clusters, threshold=10){
-  // clusters: [{typeId, repHash, n}]
   for (const c of clusters){
     const d = hamming(hash, c.repHash);
     if (d <= threshold){
@@ -145,7 +144,6 @@ function cropTileAt(ix, iy, size) {
   const crop = document.createElement('canvas');
   crop.width = size; crop.height = size;
   const cctx = crop.getContext('2d');
-  // crop region centered at ix,iy
   const sx = clamp(ix - size/2, 0, imgW - size);
   const sy = clamp(iy - size/2, 0, imgH - size);
   cctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
@@ -153,15 +151,11 @@ function cropTileAt(ix, iy, size) {
 }
 
 // ---------- Tray helpers ----------
-function traySize(){ return traySlots.length; }
-
 function addToTray(typeId){
   if (traySlots.length >= 7) return false;
   traySlots.push(typeId);
   trayCounts.set(typeId, (trayCounts.get(typeId)||0) + 1);
-  // auto remove triples
   if (trayCounts.get(typeId) === 3){
-    // remove 3 occurrences from traySlots
     let removed = 0;
     traySlots = traySlots.filter(t => {
       if (t === typeId && removed < 3){ removed++; return false; }
@@ -196,8 +190,6 @@ function renderTray(){
       slot.style.borderColor = colorForType(typeId);
       slot.style.color = colorForType(typeId);
       slot.textContent = `T${typeId}`;
-    } else {
-      slot.textContent = '';
     }
     trayView.appendChild(slot);
   }
@@ -206,10 +198,9 @@ function renderTray(){
 
 // ---------- Recommendation ----------
 function recommendNextMove(){
-  if (!img) return { ok:false, msg:'กรุณาอัปโหลดรูปก่อน' };
+  if (!img) return { ok:false, msg:'กรุณาอัปโหลด/วางรูปก่อน' };
   if (tiles.length === 0) return { ok:false, msg:'ยังไม่มีไพ่ที่แตะ — แตะไพ่ที่กดได้ก่อน' };
 
-  // count open tiles by type
   const openCount = new Map();
   for (const t of tiles) openCount.set(t.typeId, (openCount.get(t.typeId)||0)+1);
 
@@ -223,23 +214,17 @@ function recommendNextMove(){
     let reason = [];
 
     if (inTray === 2){ s += 1000; reason.push('ปิดครบ 3 เพื่อลบ'); }
-    else if (inTray === 1){ s += 220; reason.push('ทำให้เป็นคู่ (2 ใบ) เพื่อปั้นให้ครบ 3'); }
+    else if (inTray === 1){ s += 220; reason.push('ทำให้เป็นคู่ (2 ใบ)'); }
 
-    // prefer types that have multiple open copies
     const oc = openCount.get(type) || 0;
     if (oc >= 2){ s += 80; reason.push('มีใบชนิดเดียวกันที่กดได้หลายใบ'); }
 
-    // avoid new types when tray is crowded
     const isNewType = !trayTypes.has(type);
-    if (traySlots.length >= 5 && isNewType){ s -= 150; reason.push('ถาดใกล้เต็ม ควรเลี่ยงเริ่มชนิดใหม่'); }
+    if (traySlots.length >= 5 && isNewType){ s -= 150; reason.push('ถาดใกล้เต็ม เลี่ยงเริ่มชนิดใหม่'); }
 
-    // small bias towards types already in tray
     if (!isNewType) s += 40;
-
-    // if tray is 6 and this does not help, penalize
     if (traySlots.length === 6 && inTray === 0) s -= 200;
 
-    // tie-breaker: keep deterministic
     s += (1000 - t.id) * 1e-6;
 
     if (!best || s > best.score){
@@ -248,17 +233,9 @@ function recommendNextMove(){
   }
 
   if (!best) return { ok:false, msg:'หาไพ่แนะนำไม่ได้' };
+  if (traySlots.length >= 7) return { ok:false, msg:'ถาดเต็มแล้ว (7)' };
 
-  // detect immediate fail risk
-  if (traySlots.length >= 7) {
-    return { ok:false, msg:'ถาดเต็มแล้ว (7). ลองล้างข้อมูลแล้วระบุถาดให้ถูกต้อง' };
-  }
-
-  return {
-    ok: true,
-    tile: best.tile,
-    reason: best.reason.join(' • ') || 'คะแนนรวมดีที่สุด'
-  };
+  return { ok:true, tile: best.tile, reason: best.reason.join(' • ') || 'คะแนนรวมดีที่สุด' };
 }
 
 function highlightSuggestion(tile){
@@ -266,45 +243,111 @@ function highlightSuggestion(tile){
   draw();
 }
 
-// ---------- Input handlers ----------
-$('upload').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const url = URL.createObjectURL(file);
+// ---------- Load image from File/Clipboard ----------
+function loadImageFromBlob(blob){
+  const url = URL.createObjectURL(blob);
   const image = new Image();
   image.onload = () => {
     img = image;
     imgW = image.naturalWidth;
     imgH = image.naturalHeight;
 
-    // default view fit to canvas container width
-    // canvas will be sized to image, CSS will scale; set view to 1 and center
     view.scale = 1;
     view.offsetX = 0;
     view.offsetY = 0;
 
-    // set tile size heuristic
     const heuristic = Math.round(clamp(imgW / 9, 60, 110));
     $('tileSize').value = heuristic;
 
-    tiles = [];
-    nextId = 1;
-    suggestionId = null;
-    clearTray();
-
+    resetStateForNewImage();
     resizeCanvasToImage();
     draw();
   };
   image.src = url;
+}
+
+$('upload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  loadImageFromBlob(file);
+  $('result').textContent = 'โหลดรูปแล้ว ✅ (แตะเฉพาะไพ่ที่กดได้)';
+  $('pasteTarget').classList.remove('show');
+  $('pasteTarget').value = '';
 });
 
+// ---------- Paste from clipboard (iOS-friendly) ----------
+const pasteTarget = $('pasteTarget');
+
+async function handlePastedFile(file){
+  if (!file || !file.type || !file.type.startsWith('image/')) return false;
+  loadImageFromBlob(file);
+  $('result').textContent = 'รับรูปจากคลิปบอร์ดแล้ว ✅ (แตะเฉพาะไพ่ที่กดได้)';
+  pasteTarget.classList.remove('show');
+  pasteTarget.value = '';
+  return true;
+}
+
+pasteTarget.addEventListener('paste', async (e) => {
+  const dt = e.clipboardData;
+  if (!dt) return;
+
+  const items = dt.items ? Array.from(dt.items) : [];
+  for (const it of items){
+    if (it.kind === 'file'){
+      const f = it.getAsFile();
+      if (f && f.type && f.type.startsWith('image/')){
+        e.preventDefault();
+        await handlePastedFile(f);
+        return;
+      }
+    }
+  }
+
+  if (dt.files && dt.files.length){
+    for (const f of Array.from(dt.files)){
+      if (f.type && f.type.startsWith('image/')){
+        e.preventDefault();
+        await handlePastedFile(f);
+        return;
+      }
+    }
+  }
+});
+
+$('btnPaste').addEventListener('click', async () => {
+  // 1) Try async Clipboard API first (some iOS versions will show a Paste callout)
+  if (navigator.clipboard && navigator.clipboard.read){
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items){
+        const types = item.types || [];
+        const imgType = types.find(t => t.startsWith('image/'));
+        if (imgType){
+          const blob = await item.getType(imgType);
+          const file = new File([blob], 'pasted.' + (imgType.split('/')[1]||'png'), { type: imgType });
+          const ok = await handlePastedFile(file);
+          if (ok) return;
+        }
+      }
+      $('result').textContent = 'ไม่พบรูปในคลิปบอร์ด (ลองคัดลอกรูปก่อน)';
+      return;
+    } catch (err) {
+      // fallthrough to passive paste target
+    }
+  }
+
+  // 2) Passive paste: show textarea and let user long-press -> Paste
+  pasteTarget.classList.add('show');
+  pasteTarget.focus();
+  $('result').textContent = 'iPhone: แตะค้างในช่องด้านบนแล้วเลือก Paste (คัดลอกรูปมาก่อน)';
+});
+
+// ---------- Buttons ----------
 $('btnReset').addEventListener('click', () => {
-  tiles = [];
-  nextId = 1;
-  suggestionId = null;
-  clearTray();
+  resetStateForNewImage();
   draw();
+  pasteTarget.classList.remove('show');
+  pasteTarget.value = '';
   $('result').textContent = 'ล้างข้อมูลแล้ว';
 });
 
@@ -326,9 +369,7 @@ $('btnSuggest').addEventListener('click', () => {
 });
 
 $('btnAddTray').addEventListener('click', () => {
-  // Add one tile to tray by selecting from existing marked tiles: choose suggested or last.
   if (tiles.length === 0){ $('result').textContent = 'ยังไม่มีไพ่ที่แตะ'; return; }
-  // if there is a suggestion, add that type; else add the last tile type
   let typeId = null;
   if (suggestionId){
     const t = tiles.find(x => x.id === suggestionId);
@@ -344,7 +385,6 @@ $('btnAddTray').addEventListener('click', () => {
 // Tap to add tile
 canvas.addEventListener('click', (e) => {
   if (!img) return;
-  // prevent click when multi-touch gesture active
   if (pointers.size > 0) return;
 
   const { ix, iy } = screenToImageCoords(e.clientX, e.clientY);
@@ -353,7 +393,6 @@ canvas.addEventListener('click', (e) => {
   const size = parseInt($('tileSize').value, 10);
   const { crop } = cropTileAt(ix, iy, size);
 
-  // compute hash from inner region to reduce border effects
   const inner = document.createElement('canvas');
   inner.width = 64; inner.height = 64;
   const ictx = inner.getContext('2d');
@@ -362,9 +401,7 @@ canvas.addEventListener('click', (e) => {
 
   const hash = dHashFromCrop(inner);
 
-  // cluster based on existing tiles
   const clusters = [];
-  // build clusters from current tiles (representative per type)
   const repByType = new Map();
   for (const t of tiles){
     if (!repByType.has(t.typeId)) repByType.set(t.typeId, t.hash);
@@ -399,7 +436,6 @@ canvas.addEventListener('pointermove', (e) => {
   pointers.set(e.pointerId, cur);
 
   if (pointers.size === 1) {
-    // pan
     const dx = cur.x - prev.x;
     const dy = cur.y - prev.y;
     view.offsetX += dx;
@@ -412,7 +448,6 @@ canvas.addEventListener('pointermove', (e) => {
       const factor = dist / lastPinchDist;
       const newScale = clamp(view.scale * factor, 0.5, 4.0);
 
-      // zoom around midpoint
       const midX = (pts[0].x + pts[1].x)/2;
       const midY = (pts[0].y + pts[1].y)/2;
       const rect = canvas.getBoundingClientRect();
@@ -424,7 +459,6 @@ canvas.addEventListener('pointermove', (e) => {
       view.offsetX = mx - ix * newScale;
       view.offsetY = my - iy * newScale;
       view.scale = newScale;
-
       draw();
     }
     lastPinchDist = dist;
@@ -440,5 +474,4 @@ canvas.addEventListener('pointercancel', (e) => {
   if (pointers.size < 2) lastPinchDist = null;
 });
 
-// initial tray render
 renderTray();

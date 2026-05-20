@@ -3,7 +3,7 @@ header{padding:14px 14px 8px;background:#fff;border-bottom:1px solid #e6e8ef;pos
 .title{font-size:18px;font-weight:700}
 .subtitle{font-size:12px;color:#555;margin-top:4px;line-height:1.35}
 main{display:flex;gap:12px;padding:12px;align-items:flex-start;flex-wrap:wrap}
-.panel{flex:1 1 360px;max-width:560px;background:#fff;border:1px solid #e6e8ef;border-radius:12px;padding:12px}
+.panel{flex:1 1 360px;max-width:580px;background:#fff;border:1px solid #e6e8ef;border-radius:12px;padding:12px}
 .canvasWrap{flex:1 1 360px;min-width:320px;background:#fff;border:1px solid #e6e8ef;border-radius:12px;padding:10px}
 .canvasHint{font-size:12px;color:#555;margin:0 0 8px}
 .row{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}
@@ -24,3 +24,7 @@ input[type=range]{width:100%}
 .hint{font-size:12px;color:#444;line-height:1.45}
 canvas{width:100%;height:auto;border-radius:10px;border:1px solid #e6e8ef;touch-action:none}
 footer{padding:10px 14px;color:#777}
+.pasteTarget{width:100%;min-height:44px;border-radius:10px;border:1px dashed #cfd6e6;padding:10px;font-size:14px;display:none}
+.pasteTarget.show{display:block}
+
+#pasteCatcher{position:fixed;left:-1000px;top:-1000px;width:1px;height:1px;opacity:0;pointer-events:none;}

@@ -1,4 +1,4 @@
-const CACHE = 'tile-solver-mvp-v1';
+const CACHE = 'tile-solver-mvp-v02';
 const ASSETS = [
   './',
   './index.html',
@@ -23,7 +23,6 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   e.respondWith(
     caches.match(req).then(cached => cached || fetch(req).then(res => {
-      // runtime cache for same-origin GET
       if (req.method === 'GET' && new URL(req.url).origin === location.origin) {
         const copy = res.clone();
         caches.open(CACHE).then(cache => cache.put(req, copy));
