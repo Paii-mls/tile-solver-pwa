@@ -1,5 +1,5 @@
 {
-  "name": "Tile Solver (MVP)",
+  "name": "Tile Solver PWA v06",
   "short_name": "TileSolver",
   "start_url": "./index.html",
   "display": "standalone",

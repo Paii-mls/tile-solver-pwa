@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#1E88E5" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
-  <title>Tile Solver (MVP v0.4)</title>
+  <title>Tile Solver PWA v06</title>
 </head>
 <body>
   <header>
-    <div class="title">Tile Solver (MVP v0.4)</div>
-    <div class="subtitle">แก้ coordinate สำหรับ iPhone Retina/DPR แล้ว • รองรับ Paste screenshot จาก iOS</div>
+    <div class="title">Tile Solver PWA v06</div>
+    <div class="subtitle">Auto Detect + Step Mode + iOS Paste + iPhone coordinate fix</div>
   </header>
 
   <main>
@@ -28,24 +28,39 @@
       <div class="row">
         <div class="field">
           <label>ขนาดกรอบไพ่: <span id="tileSizeLabel">86</span> px</label>
-          <input id="tileSize" type="range" min="40" max="150" value="86" />
+          <input id="tileSize" type="range" min="35" max="170" value="86" />
         </div>
       </div>
 
-      <div class="row hint">
-        <div><b>วิธีใช้บน iOS แบบไม่เซฟรูป:</b></div>
-        <ol>
-          <li>กด Screenshot ในเกม → แตะ thumbnail → Share → Copy / Copy and Delete</li>
-          <li>กลับมา PWA → กด <b>📋 วางรูป (Paste)</b></li>
-          <li>แตะเฉพาะไพ่ที่ <b>กดได้/เปิดอยู่</b> 6–12 ใบ</li>
-          <li>กด <b>✨ แนะนำใบที่ควรกด</b></li>
-        </ol>
+      <div class="row">
+        <div class="field">
+          <label>ความไว Auto Detect: <span id="detectSensitivityLabel">55</span></label>
+          <input id="detectSensitivity" type="range" min="25" max="85" value="55" />
+        </div>
       </div>
 
       <div class="row">
-        <button id="btnSuggest" class="btn primary" type="button">✨ แนะนำใบที่ควรกด</button>
-        <button id="btnAddTray" class="btn" type="button">➕ เพิ่มถาดจากไพ่ล่าสุด/ที่แนะนำ</button>
+        <button id="btnAutoDetect" class="btn primary" type="button">🤖 Auto Detect ไพ่</button>
+        <button id="btnSuggest" class="btn primary" type="button">✨ แนะนำ</button>
+        <button id="btnApply" class="btn success" type="button">✅ กดใบนี้แล้ว</button>
+        <button id="btnUndo" class="btn" type="button">↩️ Undo</button>
+      </div>
+
+      <div class="row">
         <button id="btnClearTray" class="btn secondary" type="button">ล้างถาด</button>
+        <button id="btnToggleMode" class="btn" type="button">โหมดแตะ: เพิ่ม/เลือกไพ่</button>
+      </div>
+
+      <div class="row hint">
+        <div><b>Flow แนะนำ:</b></div>
+        <ol>
+          <li>Paste screenshot จาก iOS หรือ Upload รูป</li>
+          <li>กด <b>🤖 Auto Detect ไพ่</b></li>
+          <li>แตะกรอบที่ผิดเพื่อปิด/เปิด หรือแตะเพิ่มไพ่ที่ detect ตกหล่น</li>
+          <li>กด <b>✨ แนะนำ</b> → กดใบกรอบแดงในเกมจริง</li>
+          <li>กลับมา PWA กด <b>✅ กดใบนี้แล้ว</b> ระบบจะ update tray และแนะนำต่ออัตโนมัติ</li>
+          <li>ถ้าเกมเปิดไพ่ใหม่ ให้แตะเพิ่มเฉพาะใบใหม่ หรือ Paste/Auto Detect ใหม่</li>
+        </ol>
       </div>
 
       <div class="row">
@@ -65,26 +80,24 @@
 
       <div class="row">
         <details>
-          <summary>Debug / ข้อจำกัด MVP</summary>
+          <summary>คำอธิบายสี / ข้อจำกัด v06</summary>
           <ul>
-            <li>v0.4 แก้ตำแหน่ง highlight โดย map พิกัดจาก CSS pixel → image coordinate ด้วย boundingClientRect + DPR-safe rendering</li>
-            <li>ยังต้องแตะเฉพาะไพ่ที่ “กดได้” เอง เพราะ MVP ยังไม่ auto-detect layer/overlap</li>
-            <li>ถ้า Paste อัตโนมัติไม่ได้ ให้กดปุ่ม Paste แล้วแตะค้างบริเวณหน้าเว็บ เลือก Paste</li>
+            <li>สีกรอบ = กลุ่มไพ่ที่ระบบคิดว่าเป็นชนิดเดียวกัน เช่น T1, T2, T3</li>
+            <li>กรอบแดง = ใบที่แนะนำให้กดต่อ</li>
+            <li>กรอบเส้นประ/จาง = ปิดใช้งาน ไม่ถูกนับเป็นไพ่ที่กดได้</li>
+            <li>Auto Detect เป็น AI-assisted/CV prototype ยังต้อง verify ด้วยตา โดยเฉพาะไพ่ที่ซ้อนเยอะ</li>
           </ul>
         </details>
       </div>
     </section>
 
     <section class="canvasWrap">
-      <div class="canvasHint">แตะเพื่อ mark ไพ่ • ลากเพื่อเลื่อน • pinch เพื่อซูม • กรอบแดงคือคำแนะนำ</div>
+      <div class="canvasHint">แตะกรอบเพื่อเปิด/ปิด candidate • แตะพื้นที่ว่างเพื่อเพิ่มไพ่ • ลากเพื่อเลื่อน • pinch เพื่อซูม</div>
       <canvas id="canvas"></canvas>
     </section>
   </main>
 
-  <footer>
-    <span class="small">Offline-ready PWA • v0.4</span>
-  </footer>
-
+  <footer><span class="small">Offline-ready PWA • v06</span></footer>
   <div id="pasteCatcher" contenteditable="true" aria-label="paste-catcher"></div>
 
   <script src="app.js"></script>
