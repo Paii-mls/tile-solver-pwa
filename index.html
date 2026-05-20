@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E88E5" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Tile Solver (MVP)</title>
+</head>
+<body>
+  <header>
+    <div class="title">Tile Solver (MVP)</div>
+    <div class="subtitle">เวอร์ชันทดสอบ: อัปโหลดสกรีนช็อต → แตะไพ่ที่ "กดได้" → ระบบแนะนำใบที่ควรกดต่อ</div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="row">
+        <label class="btn">
+          <input id="upload" type="file" accept="image/*" capture="environment" />
+          📷 เลือกรูป/ถ่ายรูป
+        </label>
+        <button id="btnReset" class="btn secondary" type="button">ล้างข้อมูล</button>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>ขนาดกรอบไพ่ (ปรับให้พอดีกับเกม)</label>
+          <input id="tileSize" type="range" min="40" max="140" value="86" />
+        </div>
+      </div>
+
+      <div class="row hint">
+        <div>วิธีใช้ (เร็วสุด):</div>
+        <ol>
+          <li>อัปโหลดสกรีนช็อต</li>
+          <li>แตะเฉพาะไพ่ที่ <b>กดได้ (เปิดอยู่)</b> สัก 6–12 ใบ</li>
+          <li>ถ้าถาดมีไพ่อยู่แล้ว ให้กด <b>เพิ่มถาด</b> แล้วแตะไพ่ชนิดนั้นตามจำนวนจริง</li>
+          <li>กด <b>แนะนำ</b> เพื่อไฮไลต์ใบที่ควรกดต่อ</li>
+        </ol>
+      </div>
+
+      <div class="row">
+        <button id="btnSuggest" class="btn primary" type="button">✨ แนะนำใบที่ควรกด</button>
+        <button id="btnAddTray" class="btn" type="button">➕ เพิ่มถาด (เลือกชนิดจากไพ่ที่แตะ)</button>
+        <button id="btnClearTray" class="btn secondary" type="button">ล้างถาด</button>
+      </div>
+
+      <div class="row">
+        <div class="box">
+          <div class="boxTitle">สถานะถาด (สูงสุด 7)</div>
+          <div id="trayView" class="tray"></div>
+          <div id="trayMeta" class="small"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="box">
+          <div class="boxTitle">ผลลัพธ์</div>
+          <div id="result" class="result">ยังไม่มีคำแนะนำ</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <details>
+          <summary>Tips / ข้อจำกัดของ MVP</summary>
+          <ul>
+            <li>MVP นี้ยังไม่รู้ "ชั้น/การทับ" อัตโนมัติ — ให้แตะเฉพาะใบที่กดได้ในเกมตอนนั้น</li>
+            <li>การแยกชนิดใช้การ "เทียบความเหมือน" จากภาพที่ครอปด้วย dHash จึงรองรับการเปลี่ยนธีมในช่วงเวลาเดียวกันได้ดี</li>
+            <li>ถ้าแยกชนิดผิด ให้ปรับขนาดกรอบไพ่ให้พอดี แล้วแตะใหม่</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <section class="canvasWrap">
+      <div class="canvasHint">แตะบนภาพเพื่อเพิ่มไพ่ (เฉพาะไพ่ที่กดได้). ลากเพื่อเลื่อน / pinch เพื่อซูม</div>
+      <canvas id="canvas"></canvas>
+    </section>
+  </main>
+
+  <footer>
+    <span class="small">Offline-ready PWA • v0.1 MVP</span>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
+</body>
+</html>
