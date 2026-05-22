@@ -1,0 +1,12 @@
+{
+  "name": "tile-solver-v10_1-clean-macos",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.54.0"
+  },
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "test:e2e": "playwright test"
+  }
+}

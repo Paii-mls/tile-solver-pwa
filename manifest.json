@@ -1,5 +1,5 @@
 {
-  "name": "Tile Solver PWA v10",
+  "name": "Tile Solver PWA v10.1 (clean/tests)",
   "short_name": "TileSolver",
   "start_url": "./index.html",
   "display": "standalone",
